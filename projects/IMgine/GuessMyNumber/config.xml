@@ -1,0 +1,118 @@
+<zapapp path="/home/.../IMgine/">
+	<sequence>
+		<command> 
+			<exec>SQL.CONNECT(guess_my_number);;;
+				splashText=SQL.QUERY(select splashText from GameConfig);;;
+				splashPath=SQL.QUERY(select splashPath from GameConfig);;;
+				aboutText=SQL.QUERY(select aboutText from GameConfig);;;   
+				aboutPath=SQL.QUERY(select aboutPath from GameConfig)				
+			</exec>
+		</command>
+  
+		<menu includeBackOption="false">
+			<image destroyAfterShow="true">System.splashPath</image>    
+			<text>System.splashText</text>
+
+			<sequence keycode="S" description="Start">
+				<command>
+					<exec>gameEndMessage=;;;SQL.CALL(startGameStatus,,System.jidServer,,System.jidClient)
+					</exec>
+				</command>
+    
+				<sequence condition="'System.gameEndMessage'==''">
+					<command>        
+						<exec>
+							currentMessage=SQL.QUERY(select message from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							currentImagePath=SQL.QUERY(select imagePath from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							currentPromptText=SQL.QUERY(select promptText from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							currentMenuText=SQL.QUERY(select menuText from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							currentOption1=SQL.QUERY(select option1 from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;; 
+							currentOption2=SQL.QUERY(select option2 from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							currentOption3=SQL.QUERY(select option3 from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							currentOption4=SQL.QUERY(select option4 from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient)
+						</exec>
+					</command>
+					
+					<command condition="'System.currentMessage'!=''"> 
+						<text>System.currentMessage</text>        
+					</command>
+
+					<command condition="'System.currentImagePath'!=''"> 
+						<image >System.currentImagePath</image>  
+					</command>
+					
+					<prompt condition="'System.currentPromptText'!=''" 
+						execAfterConfirmation="currentCommand=System.currentMessage">
+						<text>System.currentPromptText</text>
+					</prompt>
+					
+					<menu condition="'System.currentOption1'!=''" execIfOneInstrunction="false" includeBackOption="false"> 
+						<text>System.currentMenuText</text>   
+						<command description="System.currentOption1" keycode="System.order">
+							<exec>currentCommand=option1;;;exit</exec>                            
+						</command>
+
+						<command condition="'System.currentOption2'!=''" description="System.currentOption2" keycode="System.order">
+							<exec>currentCommand=option2;;;exit</exec>                            
+						</command>
+
+						<command condition="'System.currentOption3'!=''" description="System.currentOption3" keycode="System.order">
+							<exec>currentCommand=option3;;;exit</exec>                            
+						</command>
+
+						<command condition="'System.currentOption4'!=''" description="System.currentOption4" keycode="System.order">
+							<exec>currentCommand=option4;;;exit</exec>                            
+						</command>
+					</menu>
+					
+					<command>        
+						<exec>
+							SQL.CALL(updateGameStatus,,System.currentCommand,,System.jidServer,,System.jidClient);;;
+							gameEndMessage=SQL.QUERY(select gameEndMessage from GameStatus where jidServer = ?  and jidClient = ?,,System.jidServer,,System.jidClient);;;    
+							score=SQL.QUERY(select score from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							highScorePosition=SQL.QUERY(select highScorePosition from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;             
+							highScoreText=SQL.QUERY(select highScoreText from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient)
+						</exec>
+					</command>
+
+					<command condition="'System.gameEndMessage'!=''">
+						<text>System.gameEndMessage</text>                    
+					</command>
+
+					<prompt condition="'System.gameEndMessage'!='' &amp;&amp; 'System.highScoreText'!='' &amp;&amp;
+							System.highScorePosition&gt;=0 &amp;&amp; System.highScorePosition&lt;=5" 
+							execAfterConfirmation="SQL.CALL(storeHighScore,,System.jidServer,,System.jidClient,,System.currentMessage)">
+						<text>System.highScoreText</text>
+					</prompt>
+
+					<prompt condition="'System.gameEndMessage'!=''" execAfterConfirmation="tryAgain=System.currentMessage">
+						<text>Try again (Y-Yes/N-No):</text>
+					</prompt>
+
+					<command condition="'System.gameEndMessage'!='' &amp;&amp; ('System.tryAgain'=='Y') || ('System.tryAgain'=='y')">
+						<exec>gameEndMessage=;;;
+							SQL.CALL(startGameStatus,,System.jidServer,,System.jidClient)       
+						</exec>                    
+					</command>
+				</sequence>
+			</sequence>
+    
+			<command description="HighScores" keycode="H">
+				<sequence>
+					<command>
+						<exec>highScores=SQL.CALL(getHighScores,,System.jidServer,,System.jidClient)</exec>                    
+					</command>
+					<command>
+						<text>System.highScores</text>    
+					</command>      
+				</sequence>
+			</command>
+          
+			<command description="About" keycode="A">
+				<image>System.aboutPath</image>    
+				<text>System.aboutText</text>           
+			</command>
+		</menu>            
+	</sequence>
+</zapapp>
+

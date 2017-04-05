@@ -1,0 +1,157 @@
+<zapapp path="/home/.../IMgine/BodyZap/">
+	<sequence>
+		<command> 
+			<exec>SQL.CONNECT(bodyzap);;;
+				splashText=SQL.QUERY(select splashText from GameConfig);;;
+				splashPath=SQL.QUERY(select splashPath from GameConfig);;;
+				aboutText=SQL.QUERY(select aboutText from GameConfig);;;   
+				aboutPath=SQL.QUERY(select aboutPath from GameConfig)				
+			</exec>
+		</command>
+  
+		<menu includeBackOption="false">
+			<image destroyAfterShow="true">System.splashPath</image>    
+			<text>System.splashText</text>
+
+			<sequence keycode="I" description="Iniciar">
+				<command>
+					<exec>gameEndMessage=;;;SQL.CALL(startGameStatus,,System.jidServer,,System.jidClient)
+					</exec>
+				</command>
+    
+				<sequence condition="'System.gameEndMessage'==''">
+					<command>        
+						<exec>
+							currentText=SQL.QUERY(select message from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							currentImagePath=SQL.QUERY(select imagePath from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							currentHttpText=SQL.QUERY(select httpText from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							currentHttpImage=SQL.QUERY(select httpImage from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							currentPromptText=SQL.QUERY(select promptText from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							currentMenuText=SQL.QUERY(select menuText from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							currentOption1=SQL.QUERY(select option1 from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;; 
+							currentOption2=SQL.QUERY(select option2 from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							currentOption3=SQL.QUERY(select option3 from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							currentOption4=SQL.QUERY(select option4 from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							currentOption5=SQL.QUERY(select option5 from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient)
+						</exec>
+					</command>
+					
+					<command condition="'System.currentText'!=''"> 
+						<text>System.currentText</text>        
+					</command>
+
+					<command condition="'System.currentImagePath'!=''"> 
+						<image>System.currentImagePath</image>  
+					</command>
+					
+					<command condition="'System.currentHttpText'!=''"> 
+						<http-text>System.currentHttpText</http-text>  
+					</command>
+					
+					<command condition="'System.currentHttpImage'!=''"> 
+						<http-image>System.currentHttpImage</http-image>  
+					</command>
+					
+					<prompt condition="'System.currentPromptText'!=''" 
+						execAfterConfirmation="currentCommand=System.currentMessage">
+						<text>System.currentPromptText</text>
+					</prompt>
+					
+					
+					<menu condition="'System.currentOption1'!=''" execIfOneInstrunction="false" includeBackOption="false"> 
+						<text>System.currentMenuText</text>   
+						<command description="System.currentOption1" keycode="System.order">
+							<exec>currentCommand=System.currentOption1;;;exit</exec>                            
+						</command>
+
+						<command condition="'System.currentOption2'!=''" description="System.currentOption2" keycode="System.order">
+							<exec>currentCommand=System.currentOption2;;;exit</exec>                            
+						</command>
+
+						<command condition="'System.currentOption3'!=''" description="System.currentOption3" keycode="System.order">
+							<exec>currentCommand=System.currentOption3;;;exit</exec>                            
+						</command>
+
+						<command condition="'System.currentOption4'!=''" description="System.currentOption4" keycode="System.order">
+							<exec>currentCommand=System.currentOption4;;;exit</exec>                            
+						</command>
+						
+						<command condition="'System.currentOption5'!=''" description="System.currentOption5" keycode="System.order">
+							<exec>currentCommand=System.currentOption5;;;exit</exec>                            
+						</command>
+					</menu>
+					
+					<command>        
+						<exec>
+							SQL.CALL(updateGameStatus,,System.currentCommand,,System.jidServer,,System.jidClient);;;
+							gameEndMessage=SQL.QUERY(select gameEndMessage from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;    
+							score=SQL.QUERY(select score from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;
+							highScorePosition=SQL.QUERY(select highScorePosition from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient);;;             
+							highScoreText=SQL.QUERY(select highScoreText from GameStatus where jidServer = ? and jidClient = ?,,System.jidServer,,System.jidClient)
+						</exec>
+					</command>
+
+					<command condition="'System.gameEndMessage'!=''">
+						<text>System.gameEndMessage</text>                    
+					</command>
+
+					<prompt condition="'System.gameEndMessage'!='' &amp;&amp; 'System.highScoreText'!='' &amp;&amp;
+							System.highScorePosition&gt;=0 &amp;&amp; System.highScorePosition&lt;=5" 
+							execAfterConfirmation="SQL.CALL(storeHighScore,,System.jidServer,,System.jidClient,,System.currentMessage)">
+						<text>System.highScoreText</text>
+					</prompt>
+
+					<prompt condition="'System.gameEndMessage'!=''" execAfterConfirmation="tryAgain=System.currentMessage">
+						<text>Quer tentar novamente (S-Sim/N-Não):</text>
+					</prompt>
+
+					<command condition="'System.gameEndMessage'!='' &amp;&amp; ('System.tryAgain'=='S') || ('System.tryAgain'=='s')">
+						<exec>gameEndMessage=;;;
+							SQL.CALL(startGameStatus,,System.jidServer,,System.jidClient)       
+						</exec>                    
+					</command>
+				</sequence>
+			</sequence>
+    
+			<command description="Melhores Resultados" keycode="M">
+				<sequence>
+					<command>
+						<exec>highScores=SQL.CALL(getHighScores,,System.jidServer,,System.jidClient)</exec>                    
+					</command>
+					<command>
+						<text>System.highScores</text>    
+					</command>      
+				</sequence>
+			</command>
+			
+			<command description="Pesquisa de Opinião" keycode="P">
+				<sequence>
+					<prompt execAfterConfirmation="opiniao1=System.currentMessage">
+						<text>Serão feitas 4 perguntas importantes para análise futura do BodyZap. Por favor responda até o fim para registrarmos sua opinião!</text>	
+						<text>1- Em uma escala de 1 (não conhece) a 5 (conhece muito), qual o seu nível de conhecimento em Fisiologia Humana? ('V'-Voltar)</text>
+					</prompt>   
+					<prompt execAfterConfirmation="opiniao2=System.currentMessage">
+						<text>2- Em uma escala de 1 (inútil) a 5 (muito útil), qual seria o nível de utilidade do BodyZap para o aprendizado de Fisiologia Humana? ('V'-Voltar)</text>
+					</prompt>
+					<prompt execAfterConfirmation="opiniao3=System.currentMessage">
+						<text>3- Em uma escala de 1 (muito difícil) a 5 (muito fácil), qual seria o nível de dificuldade em aprender a usar/utilizar o BodyZap? ('V'-Voltar)</text>
+					</prompt>
+					<prompt execAfterConfirmation="opiniao4=System.currentMessage">
+						<text>4- Em uma escala de 1 (insatisfeito) a 5 (muito satisfeito), qual o seu nível de satisfação com o BodyZap? ('V'-Voltar)</text>
+					</prompt>   
+					<command>
+						<exec>SQL.CALL(registrarPesquisa,,System.jidServer,,System.jidClient,,System.opiniao1,,System.opiniao2,,System.opiniao3,,System.opiniao4)</exec>
+						<text>Opinião registrada com sucesso! Obrigado pela colaboração!</text>
+					</command>
+				</sequence>
+			</command>
+	
+          
+			<command description="Sobre" keycode="S">
+				<image>System.aboutPath</image>    
+				<text>System.aboutText</text>           
+			</command>
+		</menu>            
+	</sequence>
+</zapapp>
+
